@@ -14,7 +14,7 @@
 //               CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 //               INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
 //
-package main.java.org.micromanager.plugins.magellan.acq;
+package org.micromanager.plugins.magellan.acq;
 
 /*
  * To change this template, choose Tools | Templates and open the template in
@@ -31,21 +31,23 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import javax.swing.JOptionPane;
+import org.micromanager.plugins.magellan.bidc.JavaLayerImageConstructor;
+import org.micromanager.plugins.magellan.bidc.FrameIntegrationMethod;
+import org.micromanager.plugins.magellan.channels.ChannelSetting;
+import org.micromanager.plugins.magellan.coordinates.AffineUtils;
 import java.awt.geom.AffineTransform;
-import main.java.org.micromanager.plugins.magellan.bidc.FrameIntegrationMethod;
-import main.java.org.micromanager.plugins.magellan.bidc.JavaLayerImageConstructor;
-import main.java.org.micromanager.plugins.magellan.channels.ChannelSetting;
-import main.java.org.micromanager.plugins.magellan.coordinates.AffineUtils;
-import main.java.org.micromanager.plugins.magellan.demo.DemoModeImageData;
-import main.java.org.micromanager.plugins.magellan.gui.GUI;
-import main.java.org.micromanager.plugins.magellan.json.JSONArray;
-import main.java.org.micromanager.plugins.magellan.json.JSONObject;
-import main.java.org.micromanager.plugins.magellan.main.Magellan;
-import main.java.org.micromanager.plugins.magellan.misc.GlobalSettings;
-import main.java.org.micromanager.plugins.magellan.misc.Log;
-import main.java.org.micromanager.plugins.magellan.misc.MD;
-import main.java.org.micromanager.plugins.magellan.propsandcovariants.CovariantPairing;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.micromanager.plugins.magellan.json.JSONArray;
+import org.micromanager.plugins.magellan.json.JSONObject;
+import org.micromanager.plugins.magellan.main.Magellan;
+import org.micromanager.plugins.magellan.misc.GlobalSettings;
+import org.micromanager.plugins.magellan.misc.Log;
+import org.micromanager.plugins.magellan.misc.MD;
 import mmcorej.CMMCore;
+import org.micromanager.plugins.magellan.demo.DemoModeImageData;
+import org.micromanager.plugins.magellan.gui.GUI;
+import org.micromanager.plugins.magellan.propsandcovariants.CovariantPairing;
 
 /**
  * Engine has a single thread executor, which sits idly waiting for new
@@ -298,7 +300,7 @@ public class MagellanEngine {
         loopHardwareCommandRetries(new HardwareCommand() {
             @Override
             public void run() throws Exception {
-                JavaLayerImageConstructor.getInstance().getMagellanTaggedImagesAndAddToAcq(event, currentTime, event.acquisition_.channels_.get(event.channelIndex_).exposure_);
+                JavaLayerImageConstructor.getInstance().getMagellanTaggedImagesAndAddToAcq(event, currentTime);
             }
         }, "getting tagged image");
 
@@ -316,6 +318,25 @@ public class MagellanEngine {
         }, "Setting autofocus position");
     }
 
+    //from MM website, a potential way to speed up acq:
+    //To further streamline synchronization tasks you can define all devices which must be non-busy before the image is acquired.
+// The following devices must stop moving before the image is acquired
+//core.assignImageSynchro("X");
+//core.assignImageSynchro("Y");
+//core.assignImageSynchro("Z");
+//core.assignImageSynchro("Emission");
+//
+//// Set all the positions. For some of the devices it will take a while
+//// to stop moving
+//core.SetPosition("X", 1230);
+//core.setPosition("Y", 330);
+//core.SetPosition("Z", 8000);
+//core.setState("Emission", 3);
+//
+//// Just go ahead and snap an image. The system will automatically wait
+//// for all of the above devices to stop moving before the
+//// image is acquired
+//core.snapImage();
     private void updateHardware(final AcquisitionEvent event) throws InterruptedException {
         //compare to last event to see what needs to change
         if (lastEvent_ != null && lastEvent_.acquisition_ != event.acquisition_) {
@@ -327,18 +348,18 @@ public class MagellanEngine {
 
         //move Z before XY 
         /////////////////////////////Z stage/////////////////////////////
-        if (lastEvent_ == null || event.sliceIndex_ != lastEvent_.sliceIndex_ || event.positionIndex_ != lastEvent_.positionIndex_ ) {
+        if (lastEvent_ == null || event.sliceIndex_ != lastEvent_.sliceIndex_) {
             double startTime = System.currentTimeMillis();
-            //wait for it to not be busy (is this even needed?)
-            loopHardwareCommandRetries(new HardwareCommand() {
-                @Override
-                public void run() throws Exception {
-                    while (core_.deviceBusy(zStage)) {
-                        Thread.sleep(2);
-                    }
-                }
-            }, "waiting for Z stage to not be busy");
-            //move Z stage
+//                loopHardwareCommandRetries(new HardwareCommand() {
+//                    @Override
+//                    public void run() throws Exception {
+//                        while (core_.deviceBusy(zStage)) {
+//                            System.out.println("sdfg");
+//                            Thread.sleep(2);
+//                        }
+//                    }
+//                }, "waiting for Z stage to not be busy");            
+            //move Z stage 
             loopHardwareCommandRetries(new HardwareCommand() {
                 @Override
                 public void run() throws Exception {
@@ -349,15 +370,17 @@ public class MagellanEngine {
                     }
                 }
             }, "move Z device");
-            //wait for it to not be busy (is this even needed?)
-            loopHardwareCommandRetries(new HardwareCommand() {
-                @Override
-                public void run() throws Exception {
-                    while (core_.deviceBusy(zStage)) {
-                        Thread.sleep(2);
+            //only if starting a new stack 
+            if (lastEvent_ == null || event.sliceIndex_ != lastEvent_.sliceIndex_ + 1) {
+                loopHardwareCommandRetries(new HardwareCommand() {
+                    @Override
+                    public void run() throws Exception {
+                        while (core_.deviceBusy(zStage)) {
+                            Thread.sleep(1);
+                        }
                     }
-                }
-            }, "waiting for Z stage to not be busy");
+                }, "waiting for Z stage to not be busy");
+            }
             try {
                 acqDurationEstiamtor_.storeZMoveTime(System.currentTimeMillis() - startTime);
             } catch (Exception ex) {
@@ -415,11 +438,7 @@ public class MagellanEngine {
                     loopHardwareCommandRetries(new HardwareCommand() {
                         @Override
                         public void run() throws Exception {
-                            //set exposure
-                            core_.setExposure(setting.exposure_);
-                            //set other channel props
                             core_.setConfig(setting.group_, setting.config_);
-                            core_.waitForConfig(setting.group_, setting.config_);
                         }
                     }, "Set channel group");
                 }
@@ -472,7 +491,7 @@ public class MagellanEngine {
     }
 
     public static void addImageMetadata(JSONObject tags, AcquisitionEvent event, int timeIndex,
-            int camChannelIndex, long elapsed_ms, double exposure) {
+            int camChannelIndex, long elapsed_ms, int exposure) {
         //add tags
         try {
             long gridRow = event.acquisition_.getStorage().getGridRow(event.positionIndex_, 0);
@@ -485,7 +504,6 @@ public class MagellanEngine {
             MD.setZPositionUm(tags, event.zPosition_);
             MD.setElapsedTimeMs(tags, elapsed_ms);
             MD.setImageTime(tags, (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss -")).format(Calendar.getInstance().getTime()));
-            MD.setExposure(tags, exposure);
             MD.setGridRow(tags, gridRow);
             MD.setGridCol(tags, gridCol);
             MD.setStageX(tags, event.xyPosition_.getCenter().x);
