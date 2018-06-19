@@ -15,10 +15,10 @@
 //               INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
 //
 
-package main.java.org.micromanager.plugins.magellan.autofocus;
+package org.micromanager.plugins.magellan.autofocus;
 
-import main.java.org.micromanager.plugins.magellan.acq.FixedAreaAcquisition;
-import main.java.org.micromanager.plugins.magellan.acq.MultiResMultipageTiffStorage;
+import org.micromanager.plugins.magellan.acq.FixedAreaAcquisition;
+import org.micromanager.plugins.magellan.acq.MultiResMultipageTiffStorage;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij3d.image3d.FHTImage3D;
@@ -35,8 +35,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import main.java.org.micromanager.plugins.magellan.main.Magellan;
-import main.java.org.micromanager.plugins.magellan.misc.Log;
+import org.micromanager.plugins.magellan.main.Magellan;
+import org.micromanager.plugins.magellan.misc.Log;
 import org.apache.commons.math.ArgumentOutsideDomainException;
 import org.apache.commons.math.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math.analysis.polynomials.PolynomialSplineFunction;
@@ -62,6 +62,8 @@ public class CrossCorrelationAutofocus {
    private double initialPosition_;
    private double previousPosition_;
    private double currentPosition_;
+   private double driftPerTP_;
+   private double exponentialWeight_;
    private FixedAreaAcquisition acq_;
    private int downsampleIndex_;
    private int downsampledWidth_;
@@ -69,17 +71,23 @@ public class CrossCorrelationAutofocus {
    private ExecutorService afExecutor_;
            
    
-   public CrossCorrelationAutofocus(final FixedAreaAcquisition acq, int channelIndex, double maxDisplacement , double initialPosition) {
+   public CrossCorrelationAutofocus(final FixedAreaAcquisition acq, int channelIndex, double maxDisplacement , 
+           double initialPosition, double exponentialWeight, double initialDriftEstimate) {
       afExecutor_ = Executors.newSingleThreadExecutor(new ThreadFactory() {
           @Override
           public Thread newThread(Runnable r) {
               return new Thread(r, acq.getName() + " Autofocusexecutor");
           }
       });
-       channelIndex_ = channelIndex;
+      driftPerTP_ = initialDriftEstimate;;
+      exponentialWeight_= exponentialWeight;
+      channelIndex_ = channelIndex;
       maxDisplacement_ = maxDisplacement;
       acq_ = acq;
-      initialPosition_ = initialPosition;      
+      initialPosition_ = initialPosition;    
+      previousPosition_ = initialPosition_;
+      //do this so an autofocus movement happens prior to first time point
+      currentPosition_ = initialPosition_ - driftPerTP_;
    }
  
 //   public static void debug() {
@@ -128,13 +136,9 @@ public class CrossCorrelationAutofocus {
         Log.log("________", true);
         Log.log("Autofocus for acq " + acq_.getName() + "  Time point " + timeIndex, true);
         if (timeIndex == 0) {
-            //get initial position
-            try {
-                currentPosition_ = initialPosition_;
-                previousPosition_ = initialPosition_;
-            } catch (Exception e) {
-               Log.log("Couldn't get autofocus Z drive initial position", true);
-            }
+            previousPosition_ = currentPosition_;
+            //after firts time point move agi=ain by projected drift
+            currentPosition_ = currentPosition_ - driftPerTP_;
             //figure out which resolution level will be used for xCorr
             MultiResMultipageTiffStorage storage = acq_.getStorage();
             //do these calulations with BigIntegers to prevent overflow and Nan values
@@ -155,29 +159,39 @@ public class CrossCorrelationAutofocus {
             Log.log("Drift compensation DS Index: " + downsampleIndex_, false);
             Log.log("Drift compensation DS Width: " + downsampledWidth_, false);
             Log.log("Drift compensation DS Height: " + downsampledHeight_, false);
-        } else {
-            ImageStack lastTPStack = createAFStack(acq_, timeIndex - 1, channelIndex_, downsampledWidth_, downsampledHeight_, downsampleIndex_);
-            ImageStack currentTPStack = createAFStack(acq_, timeIndex, channelIndex_, downsampledWidth_, downsampledHeight_, downsampleIndex_);
-            //run autofocus
-            //image drift is the difference between this TP and the previous one
-            //but does not represent the acutal drift because these 2 TPs will likely have different 
-            //positions for the AF compensation Z device
-            //drifteCorrection = move for the AF drive to bring current TP to position of previous TP
-            double driftCorrection = -calcFocusDrift(acq_.getName(), lastTPStack, currentTPStack, acq_.getZStep());
-            Log.log(acq_.getName() + " Drift compensation: correction = " + driftCorrection, true);
-            //now add in a factor accounting for the previous AF
-            //i.e. how far the reference image is from the desired position
-            driftCorrection += (currentPosition_ - previousPosition_);           
-            Log.log(acq_.getName() + " Drift compensation: correction (accounting for previous position) = " + driftCorrection, true);
             
-            //check if outside max displacement
-            if (Math.abs(currentPosition_ + driftCorrection - initialPosition_) > maxDisplacement_) {
-                Log.log("Calculated focus drift of " + driftCorrection + " um exceeds tolerance. Leaving autofocus offset unchanged", true);
+            Log.log("First time point complete, no drift estiamte yet", true);   
+            Log.log("Compensating for expected drift again: " + driftPerTP_, true);
+        } else {
+            ImageStack firstTPStack = createAFStack(acq_, 0, channelIndex_, downsampledWidth_, downsampledHeight_, downsampleIndex_);
+            ImageStack currentTPStack = createAFStack(acq_, timeIndex, channelIndex_, downsampledWidth_, downsampledHeight_, downsampleIndex_);
+            //claculate how much it moved since last time point
+            //positve drift imageDrift means towards objective, negative means away
+            double imageDrift = calcFocusDrift(acq_.getName(), firstTPStack, currentTPStack, acq_.getZStep());
+            //previously expected is what we tried to pre offset on last tp
+            double previouslyExpectedDrift = driftPerTP_;
+            //Total drift is how much we moved it + the apparent movement in the image
+            double totalDriftSinceLastTP = previouslyExpectedDrift + imageDrift;
+            Log.log("Previously expected drift" + previouslyExpectedDrift, true);
+            Log.log("Image drift" + imageDrift, true);
+            Log.log("Actual drift" + totalDriftSinceLastTP, true);
+
+            //calculate exponential moving average of velocity
+            driftPerTP_ = exponentialWeight_* totalDriftSinceLastTP + (1 - exponentialWeight_) * driftPerTP_;
+            //compensate for best estimate of future drift, and compensate for the image drift--how much we were off
+            //last time compared to thr ground truth of time point 0
+            double newPosition = currentPosition_ - driftPerTP_ - imageDrift;
+           //make sure its not moving way far
+            if (Math.abs(newPosition - initialPosition_) > maxDisplacement_) {
+                Log.log("Calculated focus drift of " + (newPosition - initialPosition_) + " um exceeds tolerance. Leaving autofocus offset unchanged", true);
                 return;
-            }               
-            Log.log("New position: " + (currentPosition_ + driftCorrection), true);            
+            }    
             previousPosition_ = currentPosition_;
-            currentPosition_ += driftCorrection;
+            currentPosition_ = newPosition;
+            Log.log("Updated moving average: " + driftPerTP_, true);
+            Log.log("Z drive displacement from acquisition start:" + (initialPosition_ - currentPosition_));
+
+   
         }
     }
 
@@ -220,7 +234,7 @@ public class CrossCorrelationAutofocus {
    * that current is focused 4 um deeper than current)
    */
    private double calcFocusDrift(String acqName, final ImageStack tp0Stack, final ImageStack currentTPStack, double pixelSizeZ) throws Exception {    
-      Log.log( acqName + " Autofocus: cross correlating", true);    
+//      Log.log( acqName + " Autofocus: cross correlating", true);    
       //do actual autofocusing on a seperate thread so a bug in it won't crash everything
       Future<ImageStack> f = afExecutor_.submit(new Callable<ImageStack>() {
           @Override
@@ -243,7 +257,7 @@ public class CrossCorrelationAutofocus {
            throw new Exception();
        }
       
-      Log.log( acqName + " Autofocus: finished cross correlating..calculating drift", true);      
+//      Log.log( acqName + " Autofocus: finished cross correlating..calculating drift", true);      
       ImagePlus xCorr = new ImagePlus("XCorr", xCorrStack);      
       //find the maximum cross correlation intensity at each z slice
       double[] ccIntensity = new double[xCorr.getNSlices()], interpolatedCCMax = new double[xCorr.getNSlices()];

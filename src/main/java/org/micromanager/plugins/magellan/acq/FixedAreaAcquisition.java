@@ -14,8 +14,11 @@
 //               CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 //               INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
 //
-package main.java.org.micromanager.plugins.magellan.acq;
+package org.micromanager.plugins.magellan.acq;
 
+import org.micromanager.plugins.magellan.autofocus.CrossCorrelationAutofocus;
+import org.micromanager.plugins.magellan.bidc.FrameIntegrationMethod;
+import org.micromanager.plugins.magellan.coordinates.XYStagePosition;
 import ij.IJ;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,19 +30,17 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import org.micromanager.plugins.magellan.bidc.JavaLayerImageConstructor;
+import org.micromanager.plugins.magellan.channels.ChannelSetting;
+import org.micromanager.plugins.magellan.coordinates.AffineUtils;
 import java.awt.geom.Point2D;
-import main.java.org.micromanager.plugins.magellan.autofocus.CrossCorrelationAutofocus;
-import main.java.org.micromanager.plugins.magellan.bidc.JavaLayerImageConstructor;
-import main.java.org.micromanager.plugins.magellan.channels.ChannelSetting;
-import main.java.org.micromanager.plugins.magellan.coordinates.AffineUtils;
-import main.java.org.micromanager.plugins.magellan.coordinates.XYStagePosition;
-import main.java.org.micromanager.plugins.magellan.json.JSONArray;
-import main.java.org.micromanager.plugins.magellan.main.Magellan;
-import main.java.org.micromanager.plugins.magellan.misc.Log;
-import main.java.org.micromanager.plugins.magellan.surfacesandregions.Point3d;
-import main.java.org.micromanager.plugins.magellan.surfacesandregions.SurfaceChangedListener;
-import main.java.org.micromanager.plugins.magellan.surfacesandregions.SurfaceInterpolator;
-import main.java.org.micromanager.plugins.magellan.surfacesandregions.SurfaceManager;
+import org.micromanager.plugins.magellan.json.JSONArray;
+import org.micromanager.plugins.magellan.main.Magellan;
+import org.micromanager.plugins.magellan.misc.Log;
+import org.micromanager.plugins.magellan.surfacesandregions.Point3d;
+import org.micromanager.plugins.magellan.surfacesandregions.SurfaceChangedListener;
+import org.micromanager.plugins.magellan.surfacesandregions.SurfaceInterpolator;
+import org.micromanager.plugins.magellan.surfacesandregions.SurfaceManager;
 
 /**
  *
@@ -108,16 +109,17 @@ public class FixedAreaAcquisition extends Acquisition implements SurfaceChangedL
       });
       setupXYPositions();
       initialize(settings.dir_, settings.name_, settings.tileOverlap_);
-      createEventGenerator();
       if (settings_.autofocusEnabled_) {
          //convert channel name to channel index
          int cIndex = getAutofocusChannelIndex();
          autofocus_ = new CrossCorrelationAutofocus(this, cIndex, settings_.autofocusMaxDisplacemnet_um_,
                  settings_.setInitialAutofocusPosition_ ? settings_.initialAutofocusPosition_
-                         : Magellan.getCore().getPosition(settings_.autoFocusZDevice_));
+                         : Magellan.getCore().getPosition(settings_.autoFocusZDevice_),
+         settings.autofocusExponentialWeight_, settings.autofocusInitalDriftEstimate_);
       } else {
          autofocus_ = null;
       }
+      createEventGenerator();
    }
 
    @Override
@@ -357,7 +359,7 @@ public class FixedAreaAcquisition extends Acquisition implements SurfaceChangedL
                   }
 
                   //set autofocus position
-                  if (settings_.autofocusEnabled_ && timeIndex > 1) { //read it from settings so that you can turn it off during acq                    
+                  if (settings_.autofocusEnabled_) { //read it from settings so that you can turn it off during acq                    
                      Log.log(getName() + "Setting AF position", true);
                      events_.put(AcquisitionEvent.createAutofocusEvent(settings_.autoFocusZDevice_, autofocus_.getAutofocusPosition()));
                   } else if (settings_.autofocusEnabled_ && timeIndex <= 1 && settings_.setInitialAutofocusPosition_) {

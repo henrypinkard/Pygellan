@@ -14,19 +14,18 @@
 //               CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 //               INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
 //
-package main.java.org.micromanager.plugins.magellan.acq;
+package org.micromanager.plugins.magellan.acq;
 
-import java.awt.Color;
+import org.micromanager.plugins.magellan.channels.ChannelSetting;
+import org.micromanager.plugins.magellan.channels.ChannelUtils;
+import org.micromanager.plugins.magellan.propsandcovariants.CovariantPairing;
+import org.micromanager.plugins.magellan.propsandcovariants.CovariantPairingsManager;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
-import main.java.org.micromanager.plugins.magellan.channels.ChannelSetting;
-import main.java.org.micromanager.plugins.magellan.channels.ChannelUtils;
-import main.java.org.micromanager.plugins.magellan.main.Magellan;
-import main.java.org.micromanager.plugins.magellan.misc.Log;
-import main.java.org.micromanager.plugins.magellan.propsandcovariants.CovariantPairing;
-import main.java.org.micromanager.plugins.magellan.propsandcovariants.CovariantPairingsManager;
-import main.java.org.micromanager.plugins.magellan.surfacesandregions.SurfaceInterpolator;
-import main.java.org.micromanager.plugins.magellan.surfacesandregions.XYFootprint;
+import org.micromanager.plugins.magellan.main.Magellan;
+import org.micromanager.plugins.magellan.misc.Log;
+import org.micromanager.plugins.magellan.surfacesandregions.SurfaceInterpolator;
+import org.micromanager.plugins.magellan.surfacesandregions.XYFootprint;
 
 /**
  *
@@ -34,7 +33,7 @@ import main.java.org.micromanager.plugins.magellan.surfacesandregions.XYFootprin
  */
 public class FixedAreaAcquisitionSettings  {
    
-   public static final String PREF_PREFIX = "Fixed area acquisition ";
+   private static final String PREF_PREFIX = "Fixed area acquisition ";
 
    public static final int NO_SPACE = 0;
    public static final int SIMPLE_Z_STACK = 1;
@@ -78,6 +77,8 @@ public class FixedAreaAcquisitionSettings  {
    public double autofocusMaxDisplacemnet_um_;
    public boolean setInitialAutofocusPosition_;
    public double initialAutofocusPosition_;
+   public double autofocusInitalDriftEstimate_;
+   public double autofocusExponentialWeight_;
    
    //2photon
    public int imageFilterType_;
@@ -105,21 +106,14 @@ public class FixedAreaAcquisitionSettings  {
       //channels
       channelGroup_ = prefs.get(PREF_PREFIX + "CHANNELGROUP", "");
       channels_ = ChannelUtils.getAvailableChannels(channelGroup_);
-      //load individual channel group settings
-       for (int i = 0; i < channels_.size(); i++) {
-           channels_.get(i).use_ = prefs.getBoolean(PREF_PREFIX + "CHANNELGROUP" + channelGroup_ + "CHANNELNAME" + channels_.get(i).name_ + "USE", true);
-          try { 
-              channels_.get(i).exposure_ = prefs.getDouble(PREF_PREFIX + "CHANNELGROUP" + channelGroup_ + "CHANNELNAME" + channels_.get(i).name_ + "EXPOSURE", Magellan.getCore().getExposure());
-          } catch (Exception ex) {
-              throw new RuntimeException();
-          }
-          channels_.get(i).color_ = new Color(prefs.getInt(PREF_PREFIX + "CHANNELGROUP" + channelGroup_ + "CHANNELNAME" + channels_.get(i).name_ + "COLOR", Color.white.getRGB()));                   
-       }
-       
+      
       //autofocus
       autofocusMaxDisplacemnet_um_ =  prefs.getDouble(PREF_PREFIX + "AFMAXDISP", 0.0);
       autofocusChannelName_ = prefs.get(PREF_PREFIX + "AFCHANNELNAME", null);
-      autoFocusZDevice_ = prefs.get(PREF_PREFIX + "AFZNAME", null);      
+      autoFocusZDevice_ = prefs.get(PREF_PREFIX + "AFZNAME", null);   
+      autofocusInitalDriftEstimate_ = prefs.getDouble(PREF_PREFIX + "AFDRIFTESTIMATE", 0);   
+      autofocusExponentialWeight_ = prefs.getDouble(PREF_PREFIX + "AFEXPWEIGHT", 0.8);   
+      
       //add all pairings currently present
       CovariantPairingsManager pairManager = CovariantPairingsManager.getInstance();
       //null on startup, but no pairings to add anyway  
@@ -192,8 +186,6 @@ public class FixedAreaAcquisitionSettings  {
       prefs.putBoolean(PREF_PREFIX + "ACQORDER", channelsAtEverySlice_);
       //channels
       prefs.put(PREF_PREFIX + "CHANNELGROUP", channelGroup_);
-      //Individual channel settings sotred in ChannelUtils
-
       
       //autofocus
       prefs.putDouble(PREF_PREFIX + "AFMAXDISP", autofocusMaxDisplacemnet_um_);
@@ -203,6 +195,9 @@ public class FixedAreaAcquisitionSettings  {
       if (autoFocusZDevice_ != null) {
          prefs.put(PREF_PREFIX + "AFZNAME", autoFocusZDevice_);
       }
+            prefs.putDouble(PREF_PREFIX + "AFDRIFTESTIMATE", autofocusInitalDriftEstimate_);
+      prefs.putDouble(PREF_PREFIX + "AFEXPWEIGHT", autofocusExponentialWeight_);
+
       //image filtering
       prefs.putInt(PREF_PREFIX + "IMAGE_FILTER", imageFilterType_);
       prefs.putDouble(PREF_PREFIX + "RANK", rank_);
