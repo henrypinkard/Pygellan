@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package main.java.org.micromanager.plugins.magellan.propsandcovariants;
+package org.micromanager.plugins.magellan.propsandcovariants;
 
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -13,19 +13,21 @@ import java.rmi.activation.ActivationSystem;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
-import main.java.org.micromanager.plugins.magellan.bidc.JavaLayerImageConstructor;
-import main.java.org.micromanager.plugins.magellan.coordinates.AffineUtils;
-import main.java.org.micromanager.plugins.magellan.coordinates.XYStagePosition;
-import main.java.org.micromanager.plugins.magellan.main.Magellan;
-import main.java.org.micromanager.plugins.magellan.misc.Log;
-import main.java.org.micromanager.plugins.magellan.surfacesandregions.SurfaceInterpolator;
 import org.apache.commons.math.linear.Array2DRowRealMatrix;
 import org.apache.commons.math.linear.MatrixUtils;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+import org.micromanager.plugins.magellan.acq.AcquisitionEvent;
+import org.micromanager.plugins.magellan.bidc.JavaLayerImageConstructor;
+import org.micromanager.plugins.magellan.coordinates.AffineUtils;
+import org.micromanager.plugins.magellan.coordinates.XYStagePosition;
+import org.micromanager.plugins.magellan.main.Magellan;
+import org.micromanager.plugins.magellan.misc.Log;
+import org.micromanager.plugins.magellan.surfacesandregions.SurfaceInterpolator;
+
 
 public class LaserPredNet {
 
-      private static final double SEARCH_START_DIST = 400.0;
+   private static final double SEARCH_START_DIST = 1600.0;
    private static final double SEARCH_TOLERANCE = 2.0;
    private static final int N_THETA_ANGLES = 12;
    private static final int N_HIST_BINS = 12;
