@@ -15,11 +15,11 @@
 //               INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
 //
 
-package main.java.org.micromanager.plugins.magellan.surfacesandregions;
+package org.micromanager.plugins.magellan.surfacesandregions;
 
 import javax.swing.table.AbstractTableModel;
-import main.java.org.micromanager.plugins.magellan.misc.Log;
-import main.java.org.micromanager.plugins.magellan.misc.NumberUtils;
+import org.micromanager.plugins.magellan.misc.Log;
+import org.micromanager.plugins.magellan.misc.NumberUtils;
 
 /**
  *
@@ -51,7 +51,7 @@ class SurfaceTableModel extends AbstractTableModel  {
 
    @Override
    public boolean isCellEditable(int rowIndex, int colIndex) {
-      if (colIndex == 0 || colIndex == 1) {
+      if (colIndex == 0 || colIndex == 3) {
          return true;
       }
       return false;
@@ -65,7 +65,7 @@ class SurfaceTableModel extends AbstractTableModel  {
          } catch (Exception ex) {
             Log.log("Surface name already taken",true);
          }
-      } else if (col == 1) {
+      } else if (col == 3) {
          manager_.getSurface(row).setXYPadding(NumberUtils.parseDouble((String) value));
       }  
    }
