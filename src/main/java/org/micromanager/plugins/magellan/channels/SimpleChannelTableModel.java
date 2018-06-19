@@ -15,7 +15,7 @@
 //               INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
 //
 
-package main.java.org.micromanager.plugins.magellan.channels;
+package org.micromanager.plugins.magellan.channels;
 
 import com.google.common.eventbus.Subscribe;
 import java.awt.Color;
@@ -23,12 +23,12 @@ import java.util.ArrayList;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
-import main.java.org.micromanager.plugins.magellan.main.Magellan;
-import main.java.org.micromanager.plugins.magellan.misc.GlobalSettings;
+import org.micromanager.plugins.magellan.main.Magellan;
+import org.micromanager.plugins.magellan.misc.GlobalSettings;
 import mmcorej.CMMCore;
-import org.micromanager.events.ExposureChangedEvent;
-import main.java.org.micromanager.plugins.magellan.demo.DemoModeImageData;
-import main.java.org.micromanager.plugins.magellan.misc.NumberUtils;
+import org.micromanager.api.events.ExposureChangedEvent;
+import org.micromanager.plugins.magellan.demo.DemoModeImageData;
+import org.micromanager.plugins.magellan.misc.NumberUtils;
 
 /**
  *
@@ -53,18 +53,18 @@ public class SimpleChannelTableModel extends AbstractTableModel implements Table
       exploreTable_ = true;
       core_ = Magellan.getCore();   
       channels_ = channels;
-      Magellan.getStudio().getEventManager().registerForEvents(this);
+      Magellan.getScriptInterface().registerForEvents(this);
    }
 
    public SimpleChannelTableModel() {
       exploreTable_ = false;
       core_ = Magellan.getCore();
       refreshChannels();
-      Magellan.getStudio().getEventManager().registerForEvents(this);
+      Magellan.getScriptInterface().registerForEvents(this);
    }
    
    public void shutdown() {
-      Magellan.getStudio().getEventManager().unregisterForEvents(this);
+      Magellan.getScriptInterface().unregisterForEvents(this);
    }
    
    public boolean anyChannelsActive() {
