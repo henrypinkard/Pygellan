@@ -14,8 +14,12 @@
 //               CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 //               INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
 //
-package main.java.org.micromanager.plugins.magellan.bidc;
+package org.micromanager.plugins.magellan.bidc;
 
+import org.micromanager.plugins.magellan.acq.AcquisitionEvent;
+import org.micromanager.plugins.magellan.acq.MagellanEngine;
+import org.micromanager.plugins.magellan.acq.MagellanTaggedImage;
+import org.micromanager.plugins.magellan.demo.DemoModeImageData;
 import ij.IJ;
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
@@ -24,23 +28,19 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
-import main.java.org.micromanager.plugins.magellan.acq.Acquisition;
-import main.java.org.micromanager.plugins.magellan.acq.AcquisitionEvent;
-import main.java.org.micromanager.plugins.magellan.acq.MagellanEngine;
-import main.java.org.micromanager.plugins.magellan.acq.MagellanTaggedImage;
-import main.java.org.micromanager.plugins.magellan.demo.DemoModeImageData;
-import main.java.org.micromanager.plugins.magellan.json.JSONException;
-import main.java.org.micromanager.plugins.magellan.json.JSONObject;
-import main.java.org.micromanager.plugins.magellan.main.Magellan;
-import main.java.org.micromanager.plugins.magellan.misc.GlobalSettings;
-import main.java.org.micromanager.plugins.magellan.misc.Log;
-import main.java.org.micromanager.plugins.magellan.misc.MD;
+import org.micromanager.plugins.magellan.json.JSONException;
+import org.micromanager.plugins.magellan.json.JSONObject;
+import org.micromanager.plugins.magellan.main.Magellan;
+import org.micromanager.plugins.magellan.misc.GlobalSettings;
+import org.micromanager.plugins.magellan.misc.Log;
+import org.micromanager.plugins.magellan.misc.MD;
 import mmcorej.CMMCore;
 import mmcorej.TaggedImage;
+import org.micromanager.plugins.magellan.acq.Acquisition;
 
 public class JavaLayerImageConstructor {
 
-   private static final int IMAGE_CONSTRUCTION_THREADS = 8;
+   private static final int IMAGE_CONSTRUCTION_THREADS = 16;
    private static JavaLayerImageConstructor singleton_;
    private static CMMCore core_ = Magellan.getCore();
    private ExecutorService imageConstructionExecutor_;
@@ -106,7 +106,7 @@ public class JavaLayerImageConstructor {
     * to go way faster than images can be constructed
     *
     */
-   public void getMagellanTaggedImagesAndAddToAcq(AcquisitionEvent event, final long currentTime, double exposure) throws Exception {
+   public void getMagellanTaggedImagesAndAddToAcq(AcquisitionEvent event, final long currentTime) throws Exception {
       if (javaLayerConstruction_) {
          //Images go into circular buffer one channel at a time followed by succsessive frames
          //want to change the order to all frames of a channel at a time
@@ -179,8 +179,8 @@ public class JavaLayerImageConstructor {
          }
       } else {
          for (int c = 0; c < core_.getNumberOfCameraChannels(); c++) {
-            MagellanTaggedImage img = convertTaggedImage(core_.getTaggedImage(c));          
-            MagellanEngine.addImageMetadata(img.tags, event, event.timeIndex_, c, currentTime - event.acquisition_.getStartTime_ms(), exposure);
+            MagellanTaggedImage img = convertTaggedImage(core_.getTaggedImage(c));
+            MagellanEngine.addImageMetadata(img.tags, event, event.timeIndex_, c, currentTime - event.acquisition_.getStartTime_ms(), 1);
             event.acquisition_.addImage(img);
          }
       }
