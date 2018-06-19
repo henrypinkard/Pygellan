@@ -14,12 +14,12 @@
 //               CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 //               INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
 //
-package org.micromanager.plugins.magellan.bidc;
+package main.java.org.micromanager.plugins.magellan.bidc;
 
-import org.micromanager.plugins.magellan.acq.AcquisitionEvent;
-import org.micromanager.plugins.magellan.acq.MagellanEngine;
-import org.micromanager.plugins.magellan.acq.MagellanTaggedImage;
-import org.micromanager.plugins.magellan.demo.DemoModeImageData;
+import main.java.org.micromanager.plugins.magellan.acq.AcquisitionEvent;
+import main.java.org.micromanager.plugins.magellan.acq.MagellanEngine;
+import main.java.org.micromanager.plugins.magellan.acq.MagellanTaggedImage;
+import main.java.org.micromanager.plugins.magellan.demo.DemoModeImageData;
 import ij.IJ;
 import java.awt.geom.Point2D;
 import java.util.LinkedList;
@@ -28,15 +28,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.micromanager.plugins.magellan.json.JSONException;
-import org.micromanager.plugins.magellan.json.JSONObject;
-import org.micromanager.plugins.magellan.main.Magellan;
-import org.micromanager.plugins.magellan.misc.GlobalSettings;
-import org.micromanager.plugins.magellan.misc.Log;
-import org.micromanager.plugins.magellan.misc.MD;
+import main.java.org.micromanager.plugins.magellan.json.JSONException;
+import main.java.org.micromanager.plugins.magellan.json.JSONObject;
+import main.java.org.micromanager.plugins.magellan.main.Magellan;
+import main.java.org.micromanager.plugins.magellan.misc.GlobalSettings;
+import main.java.org.micromanager.plugins.magellan.misc.Log;
+import main.java.org.micromanager.plugins.magellan.misc.MD;
 import mmcorej.CMMCore;
 import mmcorej.TaggedImage;
-import org.micromanager.plugins.magellan.acq.Acquisition;
+import main.java.org.micromanager.plugins.magellan.acq.Acquisition;
 
 public class JavaLayerImageConstructor {
 

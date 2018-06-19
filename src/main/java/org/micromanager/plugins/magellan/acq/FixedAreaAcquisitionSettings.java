@@ -14,18 +14,18 @@
 //               CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
 //               INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES.
 //
-package org.micromanager.plugins.magellan.acq;
+package main.java.org.micromanager.plugins.magellan.acq;
 
-import org.micromanager.plugins.magellan.channels.ChannelSetting;
-import org.micromanager.plugins.magellan.channels.ChannelUtils;
-import org.micromanager.plugins.magellan.propsandcovariants.CovariantPairing;
-import org.micromanager.plugins.magellan.propsandcovariants.CovariantPairingsManager;
+import main.java.org.micromanager.plugins.magellan.channels.ChannelSetting;
+import main.java.org.micromanager.plugins.magellan.channels.ChannelUtils;
+import main.java.org.micromanager.plugins.magellan.propsandcovariants.CovariantPairing;
+import main.java.org.micromanager.plugins.magellan.propsandcovariants.CovariantPairingsManager;
 import java.util.ArrayList;
 import java.util.prefs.Preferences;
-import org.micromanager.plugins.magellan.main.Magellan;
-import org.micromanager.plugins.magellan.misc.Log;
-import org.micromanager.plugins.magellan.surfacesandregions.SurfaceInterpolator;
-import org.micromanager.plugins.magellan.surfacesandregions.XYFootprint;
+import main.java.org.micromanager.plugins.magellan.main.Magellan;
+import main.java.org.micromanager.plugins.magellan.misc.Log;
+import main.java.org.micromanager.plugins.magellan.surfacesandregions.SurfaceInterpolator;
+import main.java.org.micromanager.plugins.magellan.surfacesandregions.XYFootprint;
 
 /**
  *
@@ -33,7 +33,7 @@ import org.micromanager.plugins.magellan.surfacesandregions.XYFootprint;
  */
 public class FixedAreaAcquisitionSettings  {
    
-   private static final String PREF_PREFIX = "Fixed area acquisition ";
+   public static final String PREF_PREFIX = "Fixed area acquisition ";
 
    public static final int NO_SPACE = 0;
    public static final int SIMPLE_Z_STACK = 1;
