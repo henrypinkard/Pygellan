@@ -5,12 +5,16 @@
  */
 package main.java.org.micromanager.plugins.magellan.autofocus;
 
+import java.awt.Point;
 import java.io.File;
 import java.nio.FloatBuffer;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.TreeMap;
+import main.java.org.micromanager.plugins.magellan.acq.Acquisition;
+import main.java.org.micromanager.plugins.magellan.acq.AcquisitionEvent;
 import main.java.org.micromanager.plugins.magellan.acq.MagellanTaggedImage;
 import main.java.org.micromanager.plugins.magellan.misc.GlobalSettings;
 import main.java.org.micromanager.plugins.magellan.misc.Log;
@@ -31,6 +35,9 @@ public class SingleShotAutofocus {
     private Session sess_;
     private String modelPath_;
     private String modelName_; //TODO get the short name
+    private Acquisition cachedAcq_ = null;
+    private TreeMap<Point, ArrayList<Double>> positonDefocusPredictions_ = new TreeMap<Point, ArrayList<Double>>();
+            
     
     public SingleShotAutofocus() {
         singleton_ = this;
@@ -50,7 +57,17 @@ public class SingleShotAutofocus {
         }
     }
 
-    public double predictDefocus(MagellanTaggedImage img) {
+    public double predictDefocus(MagellanTaggedImage img,  AcquisitionEvent event) {
+      //init or reset previous predicitons cache
+       if (cachedAcq_ == null){
+          cachedAcq_ = event.acquisition_;
+          
+       } else if (event.acquisition_ != cachedAcq_){
+          cachedAcq_ = event.acquisition_;
+          positonDefocusPredictions_.clear();
+       }        
+       
+       //predict from image quadrants
        Object[] quads = getImageQuadrants(img);
        ArrayList<Double> predictions = new ArrayList<Double>();
        for (Object q : quads) {
@@ -64,13 +81,47 @@ public class SingleShotAutofocus {
        for (int i =0; i < preds.length; i++) {
            preds[i] = predictions.get(i);
        }
-        Arrays.sort(preds);  
+
+     
+       //add all relevant nearby positions (i.e. previous column plus previous position
+       int column = (int) event.xyPosition_.getGridCol();
+       int row = (int) event.xyPosition_.getGridRow();
+       ArrayList<Double> prevPredictions = new ArrayList<Double>();
+       if (positonDefocusPredictions_.containsKey(new Point(row, column - 1))) {
+          prevPredictions.addAll(positonDefocusPredictions_.get(new Point(row, column - 1)));
+       }
+       if (positonDefocusPredictions_.containsKey(new Point(row-1, column - 1))) {
+          prevPredictions.addAll(positonDefocusPredictions_.get(new Point(row -1, column - 1)));
+       }       
+       if (positonDefocusPredictions_.containsKey(new Point(row+1 , column - 1))) {
+          prevPredictions.addAll(positonDefocusPredictions_.get(new Point(row +1, column - 1)));
+       }
+       if (positonDefocusPredictions_.containsKey(new Point(row+1 , column))) {
+          prevPredictions.addAll(positonDefocusPredictions_.get(new Point(row +1, column)));
+       }
+       if (positonDefocusPredictions_.containsKey(new Point(row-1, column))) {
+          prevPredictions.addAll(positonDefocusPredictions_.get(new Point(row-1, column)));
+       }
+       
+       //Combine all predicitons into one
+       prevPredictions.addAll(predictions);
+       double[] allPreds = new double[prevPredictions.size()];
+       for (int i = 0; i < allPreds.length; i++){
+          allPreds[i] = prevPredictions.get(i);
+       } 
+       
+       //Take median
+        Arrays.sort(allPreds);  
         double median;
         if (preds.length % 2 == 0) {
             median = ((double) preds[preds.length / 2] + (double) preds[preds.length / 2 - 1]) / 2;
         } else {
             median = (double) preds[preds.length / 2];
         }
+        
+       //add predictions to the cache
+       positonDefocusPredictions_.put(new Point(row, column), predictions);
+        
        return median;
     }
 
