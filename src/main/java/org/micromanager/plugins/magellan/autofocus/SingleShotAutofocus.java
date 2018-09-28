@@ -87,15 +87,15 @@ public class SingleShotAutofocus {
        int column = (int) event.xyPosition_.getGridCol();
        int row = (int) event.xyPosition_.getGridRow();
        ArrayList<Double> prevPredictions = new ArrayList<Double>();
-       if (positonDefocusPredictions_.containsKey(new Point(row, column - 1))) {
-          prevPredictions.addAll(positonDefocusPredictions_.get(new Point(row, column - 1)));
-       }
-       if (positonDefocusPredictions_.containsKey(new Point(row-1, column - 1))) {
-          prevPredictions.addAll(positonDefocusPredictions_.get(new Point(row -1, column - 1)));
-       }       
-       if (positonDefocusPredictions_.containsKey(new Point(row+1 , column - 1))) {
-          prevPredictions.addAll(positonDefocusPredictions_.get(new Point(row +1, column - 1)));
-       }
+      // if (positonDefocusPredictions_.containsKey(new Point(row, column - 1))) {
+        //  prevPredictions.addAll(positonDefocusPredictions_.get(new Point(row, column - 1)));
+      // }
+      // if (positonDefocusPredictions_.containsKey(new Point(row-1, column - 1))) {
+       //   prevPredictions.addAll(positonDefocusPredictions_.get(new Point(row -1, column - 1)));
+     //  }       
+       //if (positonDefocusPredictions_.containsKey(new Point(row+1 , column - 1))) {
+      //    prevPredictions.addAll(positonDefocusPredictions_.get(new Point(row +1, column - 1)));
+    //   }
        if (positonDefocusPredictions_.containsKey(new Point(row+1 , column))) {
           prevPredictions.addAll(positonDefocusPredictions_.get(new Point(row +1, column)));
        }

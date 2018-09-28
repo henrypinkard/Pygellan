@@ -494,16 +494,17 @@ public abstract class SurfaceInterpolator implements XYFootprint {
       transformMaxtrix[5] = gridCenterStageCoords.y;
       //create new transform with translation applied
       transform = new AffineTransform(transformMaxtrix);
-      //add all positions of rectangle around convex hull
-      for (int col = 0; col < numCols_; col++) {
-         double xPixelOffset = (col - (numCols_ - 1) / 2.0) * (tileWidthMinusOverlap);
-         //snaky pattern
-         if (col % 2 == 0) {
-             for (int row = 0; row < numRows_; row++) {
+      //add all positions of rectangle around convex hull 
+                   for (int row = 0; row < numRows_; row++) {
+
+                 double yPixelOffset = (row - (numRows_ - 1) / 2.0) * (tileHeightMinusOverlap);         //snaky pattern
+         if (row % 2 == 0) {
+                   for (int col = 0; col < numCols_; col++) {
+
                  if (Thread.interrupted()) {
                      throw new InterruptedException();
                  }
-                 double yPixelOffset = (row - (numRows_ - 1) / 2.0) * (tileHeightMinusOverlap);
+                 double xPixelOffset = (col - (numCols_ - 1) / 2.0) * (tileWidthMinusOverlap);
                  Point2D.Double pixelPos = new Point2D.Double(xPixelOffset, yPixelOffset);
                  Point2D.Double stagePos = new Point2D.Double();
                  transform.transform(pixelPos, stagePos);
@@ -512,11 +513,11 @@ public abstract class SurfaceInterpolator implements XYFootprint {
                          fullTileWidth, fullTileHeight, row, col, posTransform));
              }
          } else {
-            for (int row = numRows_-1; row >= 0; row--) {
+            for (int col = numCols_-1; col >= 0; col--) {
                  if (Thread.interrupted()) {
                      throw new InterruptedException();
                  }
-                 double yPixelOffset = (row - (numRows_ - 1) / 2.0) * (tileHeightMinusOverlap);
+                 double xPixelOffset = (col - (numCols_ - 1) / 2.0) * (tileWidthMinusOverlap);
                  Point2D.Double pixelPos = new Point2D.Double(xPixelOffset, yPixelOffset);
                  Point2D.Double stagePos = new Point2D.Double();
                  transform.transform(pixelPos, stagePos);
