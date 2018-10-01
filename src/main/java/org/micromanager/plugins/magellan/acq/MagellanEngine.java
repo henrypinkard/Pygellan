@@ -38,6 +38,8 @@ import java.util.concurrent.ThreadFactory;
 import javax.swing.JOptionPane;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import main.java.org.micromanager.plugins.magellan.autofocus.SingleShotAutofocus;
 import main.java.org.micromanager.plugins.magellan.channels.ChannelSetting;
 import main.java.org.micromanager.plugins.magellan.coordinates.AffineUtils;
@@ -273,23 +275,23 @@ public class MagellanEngine {
         } else if (event.isAutofocusEvent()) {
            //take a mini focal stack 
            final ArrayList<MagellanTaggedImage> stack = new ArrayList<MagellanTaggedImage>();
-           double[] offsets = new double[11];
-           double stepSize = 0.8;
-           int steps = 19;
+           double stepSize = 1.0;
+           int steps = 17;
+           double[] offsets = new double[steps];
            for (int i =0; i< steps; i++) {
               offsets[i] = (i-steps/2)*stepSize;
            }
            
            System.out.println("Premoving first autofocus z position");
            //extra movement of first z because it can return early
-                AcquisitionEvent e = new AcquisitionEvent(event.acquisition_, 0, event.channelIndex_, event.sliceIndex_,
+                AcquisitionEvent e = AcquisitionEvent.createAutofocusEvent(event.acquisition_, 0, event.channelIndex_, event.sliceIndex_,
                       event.positionIndex_, offsets[0] + event.zPosition_, event.xyPosition_, event.covariants_);
               updateHardware(e);
            
-            System.out.println("Taking z stack");
+           System.out.println("Taking z stack");
            for (double d : offsets) {
               //move to z position
-              e = new AcquisitionEvent(event.acquisition_, 0, event.channelIndex_, event.sliceIndex_,
+              e =  AcquisitionEvent.createAutofocusEvent(event.acquisition_, 0, event.channelIndex_, event.sliceIndex_,
                       event.positionIndex_, d + event.zPosition_, event.xyPosition_, event.covariants_);
               updateHardware(e);
               //take image
@@ -336,11 +338,21 @@ public class MagellanEngine {
          } catch (Exception exc){
              Log.log(exc);
          }
-      }
+      }          
+      double afCorrection = zOffsetInterpPoints[maxIndex];
+
            
-           
-         
-            double afCorrection = zOffsetInterpPoints[maxIndex];
+         //  int argmax = 0;
+          // double max = -99999999;
+        //   for (int i = 0; i < measures.length; i++) {
+         //     System.out.println(measures[i]);
+      //         if (measures[i] > max) {
+       //          max = measures[i];
+     //            argmax = i;
+     //         }
+   //        }
+        //    double afCorrection = offsets[argmax];
+            
             System.out.println("Correction: " + afCorrection);
             if (Math.abs(afCorrection) > ((FixedAreaAcquisition) event.acquisition_).getAFMaxDisplacement()) {
                 Log.log("Calculated af displacement of " + afCorrection + " exceeds tolerance. Leaving correction unchanged");
