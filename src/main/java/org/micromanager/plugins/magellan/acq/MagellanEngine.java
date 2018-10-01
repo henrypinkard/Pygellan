@@ -342,16 +342,16 @@ public class MagellanEngine {
       double afCorrection = zOffsetInterpPoints[maxIndex];
 
            
-         //  int argmax = 0;
-          // double max = -99999999;
-        //   for (int i = 0; i < measures.length; i++) {
-         //     System.out.println(measures[i]);
-      //         if (measures[i] > max) {
-       //          max = measures[i];
-     //            argmax = i;
-     //         }
-   //        }
-        //    double afCorrection = offsets[argmax];
+  //         int argmax = 0;
+  //         double max = -99999999;
+   //        for (int i = 0; i < measures.length; i++) {
+     //         System.out.println(measures[i]);
+   //            if (measures[i] > max) {
+  //               max = measures[i];
+   //              argmax = i;
+    //          }
+    //       }
+      //      double afCorrection = offsets[argmax];
             
             System.out.println("Correction: " + afCorrection);
             if (Math.abs(afCorrection) > ((FixedAreaAcquisition) event.acquisition_).getAFMaxDisplacement()) {
