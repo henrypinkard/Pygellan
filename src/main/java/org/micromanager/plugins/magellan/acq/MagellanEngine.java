@@ -310,6 +310,10 @@ public class MagellanEngine {
               }, "getting tagged image");
            }
            //compute power spectrum of stack
+           float]
+           
+           SingleShotAutofocus.getInstance().runModel(input)
+           
            
            for (int i = 0; i < stack.size(); i++){
               getFocusMetric((short[]) stack.get(i).pix, MD.getWidth(stack.get(i).tags), MD.getHeight(stack.get(i).tags));

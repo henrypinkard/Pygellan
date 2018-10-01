@@ -125,9 +125,9 @@ public class SingleShotAutofocus {
        return median;
     }
 
-    private double runModel(float[] input) {
+    public double runModel(float[] input) {
        
-        long[] shape = new long[]{1,1024,1024};
+        long[] shape = new long[]{1,2048,2048};
         Tensor inputTensor = Tensor.create(shape, FloatBuffer.wrap(input));
          
        long start = System.currentTimeMillis();
