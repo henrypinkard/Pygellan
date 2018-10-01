@@ -131,7 +131,7 @@ public class SingleShotAutofocus {
         Tensor inputTensor = Tensor.create(shape, FloatBuffer.wrap(input));
          
        long start = System.currentTimeMillis();
-       Tensor<Float> result = sess_.runner().feed("predict_input/input", inputTensor).fetch("predict_network/output").run().get(0).expect(Float.class);
+       Tensor<Float> result = sess_.runner().feed("input", inputTensor).fetch("output").run().get(0).expect(Float.class);
 //       System.out.println("Time to evaluate:" + (System.currentTimeMillis() - start) );
        
        float[] res=new float[1];

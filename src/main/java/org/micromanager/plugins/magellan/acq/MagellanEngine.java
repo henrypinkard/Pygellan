@@ -275,7 +275,7 @@ public class MagellanEngine {
               //move to z position
               AcquisitionEvent e = new AcquisitionEvent(event.acquisition_, 0, event.channelIndex_, event.sliceIndex_,
                       event.positionIndex_, d + event.zPosition_, event.xyPosition_, event.covariants_);
-              updateHardware(event);
+              updateHardware(e);
               //take image
               loopHardwareCommandRetries(new HardwareCommand() {
                  @Override
@@ -304,7 +304,7 @@ public class MagellanEngine {
               measures[i] = SingleShotAutofocus.getInstance().runModel(pix);
            }
            //take max
-
+           for 
             
 //            double afCorrection = SingleShotAutofocus.getInstance().predictDefocus(afImage, event);
 //            if (Math.abs(afCorrection) > ((FixedAreaAcquisition) event.acquisition_).getAFMaxDisplacement()) {
