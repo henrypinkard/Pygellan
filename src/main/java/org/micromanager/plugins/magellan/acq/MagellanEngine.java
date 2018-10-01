@@ -21,6 +21,11 @@ package main.java.org.micromanager.plugins.magellan.acq;
  * the editor.
  */
 import com.google.common.eventbus.EventBus;
+import ij.IJ;
+import ij.ImagePlus;
+import ij.WindowManager;
+import ij.process.ByteProcessor;
+import ij.process.ShortProcessor;
 import java.awt.Color;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -32,6 +37,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import javax.swing.JOptionPane;
 import java.awt.geom.AffineTransform;
+import java.util.ArrayList;
 import main.java.org.micromanager.plugins.magellan.autofocus.SingleShotAutofocus;
 import main.java.org.micromanager.plugins.magellan.channels.ChannelSetting;
 import main.java.org.micromanager.plugins.magellan.coordinates.AffineUtils;
@@ -47,6 +53,7 @@ import main.java.org.micromanager.plugins.magellan.misc.MD;
 import main.java.org.micromanager.plugins.magellan.propsandcovariants.CovariantPairing;
 import mmcorej.CMMCore;
 import mmcorej.TaggedImage;
+import org.micromanager.data.Image;
 
 /**
  * Engine has a single thread executor, which sits idly waiting for new
@@ -250,7 +257,19 @@ public class MagellanEngine {
             }
         });
     }
+    
 
+    private double getFocusMetric(short[] pixels, int width, int height) {
+       ImagePlus ip = new ImagePlus("IP", new ShortProcessor(width, height, pixels, null));  
+       ip.show();
+       IJ.run("FFT");
+       ip.close();
+       ImagePlus ft = WindowManager.getImage("FFT of IP");
+    
+       return 0;
+    }
+            
+ 
     private void executeAcquisitionEvent(final AcquisitionEvent event) throws InterruptedException {
         if (event.isReQueryEvent()) {
             //nothing to do, just a dummy event to get of blocking call when switching between parallel acquisitions
@@ -261,17 +280,46 @@ public class MagellanEngine {
             //signal to MagellanTaggedImageSink to let acqusition know that saving for the current time point has completed    
             event.acquisition_.addImage(new SignalTaggedImage(SignalTaggedImage.AcqSingal.TimepointFinished));
         } else if (event.isAutofocusEvent()) {
-            updateHardware(event);
-            acquireImage(event);
-            MagellanTaggedImage afImage = event.acquisition_.getLastImage();
-            double afCorrection = SingleShotAutofocus.getInstance().predictDefocus(afImage, event);
-            if (Math.abs(afCorrection) > ((FixedAreaAcquisition) event.acquisition_).getAFMaxDisplacement()) {
-                Log.log("Calculated af displacement of " + afCorrection + " exceeds tolerance. Leaving correction unchanged");
-            } else if (Double.isNaN(afCorrection)) {
-                Log.log("Calculated af displacement is NaN. Leaving correction unchanged");
-            } else {
-                ((FixedAreaAcquisition) event.acquisition_).setAFCorrection(afCorrection);
-            }
+           //take a mini focal stack 
+           final ArrayList<MagellanTaggedImage> stack = new ArrayList<MagellanTaggedImage>();
+           for (double d = -5; d <= 5; d += 1.0) {
+              //move to z position
+              AcquisitionEvent e = new AcquisitionEvent(event.acquisition_, 0, event.channelIndex_, event.sliceIndex_,
+                      event.positionIndex_, d + event.zPosition_, event.xyPosition_, event.covariants_);
+              updateHardware(event);
+              //take image
+              loopHardwareCommandRetries(new HardwareCommand() {
+                 @Override
+                 public void run() throws Exception {
+                    Magellan.getCore().snapImage();
+                 }
+              }, "snapping image");
+
+              //send to storage
+              loopHardwareCommandRetries(new HardwareCommand() {
+                 @Override
+                 public void run() throws Exception {
+                    MagellanTaggedImage img = convertTaggedImage(core_.getTaggedImage(0));
+                    stack.add(img);
+                 }
+              }, "getting tagged image");
+           }
+           //compute power spectrum of stack
+           
+           for (int i = 0; i < stack.size(); i++){
+              getFocusMetric((short[]) stack.get(i).pix, MD.getWidth(stack.get(i).tags), MD.getHeight(stack.get(i).tags));
+           }
+           
+
+            
+//            double afCorrection = SingleShotAutofocus.getInstance().predictDefocus(afImage, event);
+//            if (Math.abs(afCorrection) > ((FixedAreaAcquisition) event.acquisition_).getAFMaxDisplacement()) {
+//                Log.log("Calculated af displacement of " + afCorrection + " exceeds tolerance. Leaving correction unchanged");
+//            } else if (Double.isNaN(afCorrection)) {
+//                Log.log("Calculated af displacement is NaN. Leaving correction unchanged");
+//            } else {
+//                ((FixedAreaAcquisition) event.acquisition_).setAFCorrection(afCorrection);
+//            }
         } else {
             updateHardware(event);
             double startTime = System.currentTimeMillis();
