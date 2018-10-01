@@ -265,7 +265,12 @@ public class MagellanEngine {
        IJ.run("FFT");
        ip.close();
        ImagePlus ft = WindowManager.getImage("FFT of IP");
-    
+       
+       byte](ft.getProcessor().getPixels();
+       
+       ImagePlus ipft = new ImagePlus("IPFT", ft.getProcessor());  
+       ft.close();
+       ipft.show();
        return 0;
     }
             
