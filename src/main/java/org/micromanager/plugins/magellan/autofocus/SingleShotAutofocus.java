@@ -13,6 +13,8 @@ import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.TreeMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import main.java.org.micromanager.plugins.magellan.acq.Acquisition;
 import main.java.org.micromanager.plugins.magellan.acq.AcquisitionEvent;
 import main.java.org.micromanager.plugins.magellan.acq.MagellanTaggedImage;
@@ -71,7 +73,12 @@ public class SingleShotAutofocus {
        Object[] quads = getImageQuadrants(img);
        ArrayList<Double> predictions = new ArrayList<Double>();
        for (Object q : quads) {
-          double prediction = this.runModel((float[]) q);
+          double prediction = 0;
+           try {
+               prediction = this.runModel((float[]) q);
+           } catch (Exception ex) {
+               Logger.getLogger(SingleShotAutofocus.class.getName()).log(Level.SEVERE, null, ex);
+           }
           if (!Double.isNaN(prediction)) {
              predictions.add(prediction);
           }  
@@ -125,7 +132,7 @@ public class SingleShotAutofocus {
        return median;
     }
 
-    public double runModel(float[] input) {
+    public double runModel(float[] input) throws Exception {
        
         long[] shape = new long[]{1,2048,2048};
         Tensor inputTensor = Tensor.create(shape, FloatBuffer.wrap(input));
@@ -141,7 +148,9 @@ public class SingleShotAutofocus {
        
       // Generally, there may be multiple output tensors, all of them must be closed to prevent resource leaks.
       //TODO: close all resources
-              
+      inputTensor.close();
+      result.close();
+      
        return predictedDefocus;
     }
     

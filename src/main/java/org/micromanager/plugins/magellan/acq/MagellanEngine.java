@@ -320,7 +320,11 @@ public class MagellanEngine {
               for (int k = 0; k < pix.length; k++) {
                  pix[k] = (float) (spix[k] & 0xffff);
               }
+              try {
               measures[i] = SingleShotAutofocus.getInstance().runModel(pix);
+             } catch (Exception xe)  {
+                 Log.log("Exception while trying to run TF model");
+             }
            }
            
         System.out.println("Finding best focus");
