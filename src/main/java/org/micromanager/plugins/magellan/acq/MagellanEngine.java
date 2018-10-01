@@ -258,22 +258,6 @@ public class MagellanEngine {
         });
     }
     
-
-    private double getFocusMetric(short[] pixels, int width, int height) {
-       ImagePlus ip = new ImagePlus("IP", new ShortProcessor(width, height, pixels, null));  
-       ip.show();
-       IJ.run("FFT");
-       ip.close();
-       ImagePlus ft = WindowManager.getImage("FFT of IP");
-       
-       byte](ft.getProcessor().getPixels();
-       
-       ImagePlus ipft = new ImagePlus("IPFT", ft.getProcessor());  
-       ft.close();
-       ipft.show();
-       return 0;
-    }
-            
  
     private void executeAcquisitionEvent(final AcquisitionEvent event) throws InterruptedException {
         if (event.isReQueryEvent()) {
@@ -310,15 +294,16 @@ public class MagellanEngine {
               }, "getting tagged image");
            }
            //compute power spectrum of stack
-           float]
-           
-           SingleShotAutofocus.getInstance().runModel(input)
-           
-           
+           double[] measures = new double[stack.size()];
            for (int i = 0; i < stack.size(); i++){
-              getFocusMetric((short[]) stack.get(i).pix, MD.getWidth(stack.get(i).tags), MD.getHeight(stack.get(i).tags));
+              short[] spix = (short[]) stack.get(i).pix;
+              float[] pix = new float[spix.length];
+              for (int k = 0; k < pix.length; k++) {
+                 pix[k] = (float) (spix[k] & 0xffff);
+              }
+              measures[i] = SingleShotAutofocus.getInstance().runModel(pix);
            }
-           
+           //take max
 
             
 //            double afCorrection = SingleShotAutofocus.getInstance().predictDefocus(afImage, event);
