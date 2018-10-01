@@ -137,7 +137,7 @@ public class SingleShotAutofocus {
        float[] res=new float[1];
        result.copyTo(res); 
        double predictedDefocus = res[0];
-       System.out.println("Total prediction: " + predictedDefocus);
+    //   System.out.println("Total prediction: " + predictedDefocus);
        
       // Generally, there may be multiple output tensors, all of them must be closed to prevent resource leaks.
       //TODO: close all resources

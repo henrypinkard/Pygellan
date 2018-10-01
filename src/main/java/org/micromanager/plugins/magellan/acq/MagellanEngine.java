@@ -53,6 +53,8 @@ import main.java.org.micromanager.plugins.magellan.misc.MD;
 import main.java.org.micromanager.plugins.magellan.propsandcovariants.CovariantPairing;
 import mmcorej.CMMCore;
 import mmcorej.TaggedImage;
+import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
+import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 import org.micromanager.data.Image;
 
 /**
@@ -272,15 +274,22 @@ public class MagellanEngine {
            //take a mini focal stack 
            final ArrayList<MagellanTaggedImage> stack = new ArrayList<MagellanTaggedImage>();
            double[] offsets = new double[11];
-           double stepSize = 1.0;
-           int steps = 11;
+           double stepSize = 0.8;
+           int steps = 19;
            for (int i =0; i< steps; i++) {
               offsets[i] = (i-steps/2)*stepSize;
            }
            
+           System.out.println("Premoving first autofocus z position");
+           //extra movement of first z because it can return early
+                AcquisitionEvent e = new AcquisitionEvent(event.acquisition_, 0, event.channelIndex_, event.sliceIndex_,
+                      event.positionIndex_, offsets[0] + event.zPosition_, event.xyPosition_, event.covariants_);
+              updateHardware(e);
+           
+            System.out.println("Taking z stack");
            for (double d : offsets) {
               //move to z position
-              AcquisitionEvent e = new AcquisitionEvent(event.acquisition_, 0, event.channelIndex_, event.sliceIndex_,
+              e = new AcquisitionEvent(event.acquisition_, 0, event.channelIndex_, event.sliceIndex_,
                       event.positionIndex_, d + event.zPosition_, event.xyPosition_, event.covariants_);
               updateHardware(e);
               //take image
@@ -300,6 +309,7 @@ public class MagellanEngine {
                  }
               }, "getting tagged image");
            }
+           System.out.println("Computing focus quality");
            //compute power spectrum of stack
            double[] measures = new double[stack.size()];
            for (int i = 0; i < stack.size(); i++){
@@ -310,17 +320,28 @@ public class MagellanEngine {
               }
               measures[i] = SingleShotAutofocus.getInstance().runModel(pix);
            }
-           //take max
-           int argmax = 0;
-           double max = -99999999;
-           for (int i = 0; i < measures.length; i++) {
-              if (measures[i] > max) {
-                 max = measures[i];
-                 argmax = i;
-              }
-           }
-            
-            double afCorrection = measures[argmax];
+           
+        System.out.println("Finding best focus");
+      //find maximum value of interpolated spline function
+      int SPLINE_PRECISION = 10;
+      PolynomialSplineFunction func = new SplineInterpolator().interpolate(offsets, measures);
+      double[] zOffsetInterpPoints = new double[(int) (SPLINE_PRECISION * (measures.length - 1))];
+      int maxIndex = 0;
+      for (int i = 0; i < zOffsetInterpPoints.length; i++) {
+         zOffsetInterpPoints[i] = i * stepSize / (double) SPLINE_PRECISION + offsets[0];
+         try {
+         if (func.value(zOffsetInterpPoints[i]) > func.value(zOffsetInterpPoints[maxIndex])) {
+             maxIndex = i;
+         }
+         } catch (Exception exc){
+             Log.log(exc);
+         }
+      }
+           
+           
+         
+            double afCorrection = zOffsetInterpPoints[maxIndex];
+            System.out.println("Correction: " + afCorrection);
             if (Math.abs(afCorrection) > ((FixedAreaAcquisition) event.acquisition_).getAFMaxDisplacement()) {
                 Log.log("Calculated af displacement of " + afCorrection + " exceeds tolerance. Leaving correction unchanged");
             } else if (Double.isNaN(afCorrection)) {
