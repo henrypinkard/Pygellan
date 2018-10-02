@@ -38,6 +38,7 @@ import java.util.concurrent.ThreadFactory;
 import javax.swing.JOptionPane;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import main.java.org.micromanager.plugins.magellan.autofocus.SingleShotAutofocus;
@@ -78,6 +79,7 @@ public class MagellanEngine {
     private ExecutorService acqExecutor_;
     private EventBus bus_;
     private AcqDurationEstimator acqDurationEstiamtor_;
+    private ArrayList<Double> prevDefocus_ = new ArrayList<Double>();
 
     public MagellanEngine(CMMCore core, AcqDurationEstimator acqDurationEstiamtor) {
         core_ = core;
@@ -273,16 +275,31 @@ public class MagellanEngine {
             //signal to MagellanTaggedImageSink to let acqusition know that saving for the current time point has completed    
             event.acquisition_.addImage(new SignalTaggedImage(SignalTaggedImage.AcqSingal.TimepointFinished));
         } else if (event.isAutofocusEvent()) {
-           //take a mini focal stack 
-           final ArrayList<MagellanTaggedImage> stack = new ArrayList<MagellanTaggedImage>();
-           double bias = -9.0; 
-           double stepSize = 1.0;
-           int steps = 15;
+            //take a mini focal stack 
+           double stepSize = 1.2;
+            double bias = 0;
+           int steps =0;
+            if (prevDefocus_.size() < 30) {
+              bias = -2.0;
+              steps = 25;
+           } else {
+            //Use median of previous predictions as bias
+            ArrayList<Double> copy = new ArrayList<Double>(prevDefocus_);
+            Collections.sort(copy);
+            if (copy.size() % 2 == 0) {
+                  bias = ((double) copy.get(copy.size() / 2) + (double) copy.get(copy.size() / 2 - 1)) / 2;
+               } else {
+                  bias = (double) copy.get(copy.size() / 2);
+                  steps = 9;
+               }
+            }
+               
            double[] offsets = new double[steps];
            for (int i =0; i< steps; i++) {
               offsets[i] = (i-steps/2)*stepSize + bias;
            }
            
+           final ArrayList<MagellanTaggedImage> stack = new ArrayList<MagellanTaggedImage>();
            System.out.println("Premoving first autofocus z position");
            //extra movement of first z because it can return early
                 AcquisitionEvent e = AcquisitionEvent.createAutofocusEvent(event.acquisition_, 0, event.channelIndex_, event.sliceIndex_,
@@ -346,7 +363,11 @@ public class MagellanEngine {
       }          
       double afCorrection = zOffsetInterpPoints[maxIndex];
 
-           
+      prevDefocus_.add(afCorrection);
+      if (prevDefocus_.size() > 30) {
+         prevDefocus_.remove(0);
+      }
+      
   //         int argmax = 0;
   //         double max = -99999999;
    //        for (int i = 0; i < measures.length; i++) {
