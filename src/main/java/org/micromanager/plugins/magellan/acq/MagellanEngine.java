@@ -275,11 +275,12 @@ public class MagellanEngine {
         } else if (event.isAutofocusEvent()) {
            //take a mini focal stack 
            final ArrayList<MagellanTaggedImage> stack = new ArrayList<MagellanTaggedImage>();
+           double bias = -9.0; 
            double stepSize = 1.0;
-           int steps = 17;
+           int steps = 15;
            double[] offsets = new double[steps];
            for (int i =0; i< steps; i++) {
-              offsets[i] = (i-steps/2)*stepSize;
+              offsets[i] = (i-steps/2)*stepSize + bias;
            }
            
            System.out.println("Premoving first autofocus z position");
@@ -357,7 +358,7 @@ public class MagellanEngine {
     //       }
       //      double afCorrection = offsets[argmax];
             
-            System.out.println("Correction: " + afCorrection);
+            Log.log("Correction: " + afCorrection);
             if (Math.abs(afCorrection) > ((FixedAreaAcquisition) event.acquisition_).getAFMaxDisplacement()) {
                 Log.log("Calculated af displacement of " + afCorrection + " exceeds tolerance. Leaving correction unchanged");
             } else if (Double.isNaN(afCorrection)) {
