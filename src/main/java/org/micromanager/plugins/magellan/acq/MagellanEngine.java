@@ -289,10 +289,11 @@ public class MagellanEngine {
             if (copy.size() % 2 == 0) {
                   bias = ((double) copy.get(copy.size() / 2) + (double) copy.get(copy.size() / 2 - 1)) / 2;
                } else {
-                  bias = (double) copy.get(copy.size() / 2);
-                  steps = 9;
+                  bias = (double) copy.get(copy.size() / 2);       
                }
+               steps = 9; 
             }
+            System.out.println("bias:" +bias);
                
            double[] offsets = new double[steps];
            for (int i =0; i< steps; i++) {
@@ -300,16 +301,17 @@ public class MagellanEngine {
            }
            
            final ArrayList<MagellanTaggedImage> stack = new ArrayList<MagellanTaggedImage>();
-           System.out.println("Premoving first autofocus z position");
+           
+           //System.out.println("Premoving first autofocus z position");
            //extra movement of first z because it can return early
-                AcquisitionEvent e = AcquisitionEvent.createAutofocusEvent(event.acquisition_, 0, event.channelIndex_, event.sliceIndex_,
-                      event.positionIndex_, offsets[0] + event.zPosition_, event.xyPosition_, event.covariants_);
-              updateHardware(e);
+           //     AcquisitionEvent e = AcquisitionEvent.createAutofocusEvent(event.acquisition_, 0, event.channelIndex_, event.sliceIndex_,
+           //           event.positionIndex_, offsets[0] + event.zPosition_, event.xyPosition_, event.covariants_);
+           //   updateHardware(e);
            
            System.out.println("Taking z stack");
            for (double d : offsets) {
               //move to z position
-              e =  AcquisitionEvent.createAutofocusEvent(event.acquisition_, 0, event.channelIndex_, event.sliceIndex_,
+              AcquisitionEvent e =  AcquisitionEvent.createAutofocusEvent(event.acquisition_, 0, event.channelIndex_, event.sliceIndex_,
                       event.positionIndex_, d + event.zPosition_, event.xyPosition_, event.covariants_);
               updateHardware(e);
               //take image
