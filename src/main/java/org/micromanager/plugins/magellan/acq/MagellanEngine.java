@@ -275,12 +275,16 @@ public class MagellanEngine {
             //signal to MagellanTaggedImageSink to let acqusition know that saving for the current time point has completed    
             event.acquisition_.addImage(new SignalTaggedImage(SignalTaggedImage.AcqSingal.TimepointFinished));
         } else if (event.isAutofocusEvent()) {
+            if(event.positionIndex_ % 4 != 0 && prevDefocus_.size() <= 9) {
+                System.out.println("skipping z stack");
+                return;  
+            } 
             //take a mini focal stack 
            double stepSize = 1.2;
             double bias = 0;
            int steps =0;
-            if (prevDefocus_.size() < 30) {
-              bias = -2.0;
+            if (prevDefocus_.size() < 9) {
+              bias = 0.0;
               steps = 25;
            } else {
             //Use median of previous predictions as bias
@@ -366,7 +370,7 @@ public class MagellanEngine {
       double afCorrection = zOffsetInterpPoints[maxIndex];
 
       prevDefocus_.add(afCorrection);
-      if (prevDefocus_.size() > 30) {
+      if (prevDefocus_.size() > 9) {
          prevDefocus_.remove(0);
       }
       
@@ -381,12 +385,12 @@ public class MagellanEngine {
     //       }
       //      double afCorrection = offsets[argmax];
             
-            Log.log("Correction: " + afCorrection);
+            Log.log("Bias: " + bias + "    Correction: " + afCorrection);
             if (Math.abs(afCorrection) > ((FixedAreaAcquisition) event.acquisition_).getAFMaxDisplacement()) {
                 Log.log("Calculated af displacement of " + afCorrection + " exceeds tolerance. Leaving correction unchanged");
             } else if (Double.isNaN(afCorrection)) {
                 Log.log("Calculated af displacement is NaN. Leaving correction unchanged");
-            } else {
+            } else {  
                 ((FixedAreaAcquisition) event.acquisition_).setAFCorrection(afCorrection);
             }
         } else {
