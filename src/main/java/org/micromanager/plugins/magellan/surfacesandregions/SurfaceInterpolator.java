@@ -34,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import main.java.org.micromanager.plugins.magellan.main.Magellan;
+import main.java.org.micromanager.plugins.magellan.misc.GlobalSettings;
 import main.java.org.micromanager.plugins.magellan.misc.Log;
 import org.apache.commons.math3.geometry.euclidean.twod.Euclidean2D;
 import org.apache.commons.math3.geometry.euclidean.twod.PolygonsSet;
@@ -494,8 +495,31 @@ public abstract class SurfaceInterpolator implements XYFootprint {
       transformMaxtrix[5] = gridCenterStageCoords.y;
       //create new transform with translation applied
       transform = new AffineTransform(transformMaxtrix);
+      ArrayList<Integer> colIndices = new ArrayList<Integer>();
+      if (GlobalSettings.getInstance().getStringInPrefs("TILE_ORDER", "SNAKY").equals("SNAKY")) { 
+         for (int col = 0; col < numCols_; col++) {
+            colIndices.add(col);
+         } 
+      } else{
+         int low =0, high = numCols_-1;
+         while (true) {
+            colIndices.add(low);
+             if (low == high) {
+                break;
+             }
+             low++;
+             colIndices.add(high);
+             if (low == high) {
+                break;
+             }
+             high--;
+         }
+        
+      }
+         
+         
       //add all positions of rectangle around convex hull
-      for (int col = 0; col < numCols_; col++) {
+      for (int col : colIndices) {
          double xPixelOffset = (col - (numCols_ - 1) / 2.0) * (tileWidthMinusOverlap);
          //snaky pattern
          if (col % 2 == 0) {
@@ -526,6 +550,9 @@ public abstract class SurfaceInterpolator implements XYFootprint {
              }     
          }
       }
+    
+      
+      
       //delete positions squares (+padding) that do not overlap convex hull
       for (int i = positions.size() - 1; i >= 0; i--) {
          if (Thread.interrupted()) {

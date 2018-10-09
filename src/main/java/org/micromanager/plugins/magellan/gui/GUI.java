@@ -667,6 +667,7 @@ public class GUI extends javax.swing.JFrame {
       filterMethodButtonGroup_ = new javax.swing.ButtonGroup();
       exploreFilterMethodButtonGroup_ = new javax.swing.ButtonGroup();
       jLabel11 = new javax.swing.JLabel();
+      tileOrderButtonGroup_ = new javax.swing.ButtonGroup();
       splitPane_ = new javax.swing.JSplitPane();
       splitPaneTopPanel_ = splitPaneTopPanel_ = new javax.swing.JTabbedPane() {
 
@@ -781,6 +782,9 @@ public class GUI extends javax.swing.JFrame {
       tileOverlapPercentLabel_ = new javax.swing.JLabel();
       acqOrderCombo_ = new javax.swing.JComboBox();
       acqOrderLabel_ = new javax.swing.JLabel();
+      jLabel4 = new javax.swing.JLabel();
+      Snaky = new javax.swing.JRadioButton();
+      OuterColumns = new javax.swing.JRadioButton();
       ChannelsTab_ = new javax.swing.JPanel();
       jScrollPane1 = new javax.swing.JScrollPane();
       channelsTable_ = new javax.swing.JTable();
@@ -1760,6 +1764,24 @@ public class GUI extends javax.swing.JFrame {
 
       acqOrderLabel_.setText("Order:");
 
+      jLabel4.setText("Tile order:");
+
+      tileOrderButtonGroup_.add(Snaky);
+      Snaky.setText("Snaky");
+      Snaky.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            SnakyActionPerformed(evt);
+         }
+      });
+
+      tileOrderButtonGroup_.add(OuterColumns);
+      OuterColumns.setText("Outer columns");
+      OuterColumns.addActionListener(new java.awt.event.ActionListener() {
+         public void actionPerformed(java.awt.event.ActionEvent evt) {
+            OuterColumnsActionPerformed(evt);
+         }
+      });
+
       javax.swing.GroupLayout spaceTab_Layout = new javax.swing.GroupLayout(spaceTab_);
       spaceTab_.setLayout(spaceTab_Layout);
       spaceTab_Layout.setHorizontalGroup(
@@ -1768,33 +1790,40 @@ public class GUI extends javax.swing.JFrame {
             .addContainerGap()
             .addGroup(spaceTab_Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                .addGroup(spaceTab_Layout.createSequentialGroup()
-                  .addComponent(checkBox3D_)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                  .addComponent(zStepLabel_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(zStepSpinner_, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                  .addComponent(acqTileOverlapLabel_)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(acqOverlapPercentSpinner_, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(tileOverlapPercentLabel_)
-                  .addGap(18, 18, 18)
-                  .addComponent(acqOrderLabel_)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(acqOrderCombo_, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE))
-               .addGroup(spaceTab_Layout.createSequentialGroup()
-                  .addComponent(simpleZPanel_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(volumeBetweenZPanel_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(fixedDistanceZPanel_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-               .addGroup(spaceTab_Layout.createSequentialGroup()
                   .addGap(6, 6, 6)
                   .addComponent(checkBox2D_)
                   .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(panel2D_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-            .addContainerGap(255, Short.MAX_VALUE))
+                  .addComponent(panel2D_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+               .addGroup(spaceTab_Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                  .addGroup(javax.swing.GroupLayout.Alignment.LEADING, spaceTab_Layout.createSequentialGroup()
+                     .addComponent(simpleZPanel_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                     .addComponent(volumeBetweenZPanel_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                     .addComponent(fixedDistanceZPanel_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                     .addComponent(OuterColumns))
+                  .addGroup(javax.swing.GroupLayout.Alignment.LEADING, spaceTab_Layout.createSequentialGroup()
+                     .addComponent(checkBox3D_)
+                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                     .addComponent(zStepLabel_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                     .addComponent(zStepSpinner_, javax.swing.GroupLayout.PREFERRED_SIZE, 77, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                     .addComponent(acqTileOverlapLabel_)
+                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                     .addComponent(acqOverlapPercentSpinner_, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                     .addComponent(tileOverlapPercentLabel_)
+                     .addGap(18, 18, 18)
+                     .addComponent(acqOrderLabel_)
+                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                     .addComponent(acqOrderCombo_, javax.swing.GroupLayout.PREFERRED_SIZE, 207, javax.swing.GroupLayout.PREFERRED_SIZE)
+                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                     .addComponent(jLabel4)
+                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                     .addComponent(Snaky))))
+            .addContainerGap(127, Short.MAX_VALUE))
       );
       spaceTab_Layout.setVerticalGroup(
          spaceTab_Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1809,16 +1838,20 @@ public class GUI extends javax.swing.JFrame {
                   .addComponent(acqOverlapPercentSpinner_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                   .addComponent(tileOverlapPercentLabel_)
                   .addComponent(acqOrderCombo_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                  .addComponent(acqOrderLabel_)))
+                  .addComponent(acqOrderLabel_)
+                  .addComponent(jLabel4)
+                  .addComponent(Snaky)))
             .addGroup(spaceTab_Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-               .addGroup(spaceTab_Layout.createSequentialGroup()
-                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                  .addComponent(simpleZPanel_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                .addGroup(spaceTab_Layout.createSequentialGroup()
                   .addGap(11, 11, 11)
                   .addGroup(spaceTab_Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                      .addComponent(fixedDistanceZPanel_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                     .addComponent(volumeBetweenZPanel_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                     .addComponent(volumeBetweenZPanel_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+               .addGroup(spaceTab_Layout.createSequentialGroup()
+                  .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                  .addGroup(spaceTab_Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                     .addComponent(OuterColumns)
+                     .addComponent(simpleZPanel_, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
             .addGroup(spaceTab_Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                .addGroup(spaceTab_Layout.createSequentialGroup()
@@ -2549,9 +2582,20 @@ public class GUI extends javax.swing.JFrame {
       acquisitionSettingsChanged();
    }//GEN-LAST:event_timeIntevalUnitCombo_ActionPerformed
 
+   private void SnakyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SnakyActionPerformed
+      GlobalSettings.getInstance().storeStringInPrefs("TILE_ORDER", "SNAKY");
+   }//GEN-LAST:event_SnakyActionPerformed
+
+   private void OuterColumnsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_OuterColumnsActionPerformed
+       GlobalSettings.getInstance().storeStringInPrefs("TILE_ORDER", "OUTER_COLUMNS");
+
+   }//GEN-LAST:event_OuterColumnsActionPerformed
+
    // Variables declaration - do not modify//GEN-BEGIN:variables
    private javax.swing.JComboBox ChannelGroupCombo_;
    private javax.swing.JPanel ChannelsTab_;
+   private javax.swing.JRadioButton OuterColumns;
+   private javax.swing.JRadioButton Snaky;
    private javax.swing.JComboBox acqOrderCombo_;
    private javax.swing.JLabel acqOrderLabel_;
    private javax.swing.JSpinner acqOverlapPercentSpinner_;
@@ -2618,6 +2662,7 @@ public class GUI extends javax.swing.JFrame {
    private javax.swing.JLabel jLabel12;
    private javax.swing.JLabel jLabel2;
    private javax.swing.JLabel jLabel3;
+   private javax.swing.JLabel jLabel4;
    private javax.swing.JLabel jLabel5;
    private javax.swing.JLabel jLabel6;
    private javax.swing.JLabel jLabel8;
@@ -2660,6 +2705,7 @@ public class GUI extends javax.swing.JFrame {
    private javax.swing.JSplitPane splitPane_;
    private javax.swing.JPanel surfacesPanel_;
    private javax.swing.JTable surfacesTable_;
+   private javax.swing.ButtonGroup tileOrderButtonGroup_;
    private javax.swing.JLabel tileOverlapPercentLabel_;
    private javax.swing.JLabel timeIntervalLabel_;
    private javax.swing.JSpinner timeIntervalSpinner_;
