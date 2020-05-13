@@ -1,3 +1,6 @@
+# Pygellan is now deprecated
+## All functionality (+ much more) has been subsumed into [Pycro-manager](https://github.com/micro-manager/pycro-manager)
+
 # Pygellan
 Pygellan is a Python library for enabling microscope acquisition control and data analysis. It works together with the [Micro-manager](https://micro-manager.org/) plugin, [Micro-magellan](https://micro-manager.org/wiki/MicroMagellan). Pygellan has two subpackages, `pygellan.acquire` and `pygellan.magellan_data` which are for data acquisition/hardware control and data anlysis, respectively. Pygellan is integrated with other projects in the scientific python ecosystem, including [Napari](https://github.com/napari/napari) (for data visualization) and [Dask](https://dask.org/) (for large scale data analysis). Pygellan development is currently in alpha--new features are being added and there are not yet guarantees on the stability of the API. Information about future development can be found on the issues page. Feel free to add comments, ideas, or other feedback on the [issues](https://github.com/henrypinkard/Pygellan/issues) page.
 
